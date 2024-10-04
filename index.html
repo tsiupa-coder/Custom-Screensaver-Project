@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: url('space-background.jpg') no-repeat center center fixed;
+            background-size: cover;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        #dvd-logo {
+            position: absolute;
+            width: 400px;
+            height: 200px;
+            background-image: url('logo.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            transform-origin: center center;
+        }
+
+        #speed-control {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            color: white;
+            text-align: center;
+        }
+
+        #speed-control input[type="range"] {
+            width: 200px;
+        }
+
+        #score-display {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div id="dvd-logo"></div>
+    <div id="speed-control">
+        <label for="speed-slider">Speed:</label>
+        <input type="range" id="speed-slider" min="1" max="100" value="2" step="0.5">
+    </div>
+    <div id="score-display">Score: 0</div>
+
+    <script>
+        window.onload = function() {
+            const logo = document.getElementById('dvd-logo');
+            const speedSlider = document.getElementById('speed-slider');
+            const scoreDisplay = document.getElementById('score-display');
+
+            let x = 0;
+            let y = 0;
+            let baseSpeed = parseFloat(speedSlider.value);
+            let speed = baseSpeed;
+            let angle = Math.random() * 2 * Math.PI; // Random initial angle
+            let xSpeed = speed * Math.cos(angle);
+            let ySpeed = speed * Math.sin(angle);
+            let score = 0;
+
+            const logoWidth = 200; // Must match the CSS width
+            const logoHeight = 100; // Must match the CSS height
+
+            speedSlider.oninput = function() {
+                baseSpeed = parseFloat(this.value);
+                speed = baseSpeed;
+                let currentAngle = Math.atan2(ySpeed, xSpeed);
+                xSpeed = speed * Math.cos(currentAngle);
+                ySpeed = speed * Math.sin(currentAngle);
+            };
+
+            function update() {
+                const maxX = window.innerWidth - logoWidth;
+                const maxY = window.innerHeight - logoHeight;
+
+                x += xSpeed;
+                y += ySpeed;
+
+                let hitCorner = false;
+                let collided = false;
+
+                if (x <= 0 || x >= maxX) {
+                    x = x <= 0 ? 0 : maxX;
+
+                    let angleChange = (Math.random() - 0.5) * (Math.PI / 4);
+                    let currentAngle = Math.atan2(ySpeed, xSpeed);
+                    currentAngle = Math.PI - currentAngle + angleChange;
+                    xSpeed = speed * Math.cos(currentAngle);
+                    ySpeed = speed * Math.sin(currentAngle);
+                    collided = true;
+                }
+
+                if (y <= 0 || y >= maxY) {
+                    y = y <= 0 ? 0 : maxY;
+
+                    // Introduce random angle change upon collision
+                    let angleChange = (Math.random() - 0.5) * (Math.PI / 4);
+                    let currentAngle = Math.atan2(ySpeed, xSpeed);
+                    currentAngle = -currentAngle + angleChange;
+                    xSpeed = speed * Math.cos(currentAngle);
+                    ySpeed = speed * Math.sin(currentAngle);
+                    collided = true;
+                }
+
+                // Check for corner hit
+                if (collided && (
+                    (x <= 0 && y <= 0) ||
+                    (x >= maxX && y <= 0) ||
+                    (x <= 0 && y >= maxY) ||
+                    (x >= maxX && y >= maxY)
+                )) {
+                    hitCorner = true;
+                }
+
+                if (hitCorner) {
+                    logo.style.filter = `hue-rotate(${Math.random() * 360}deg)`;
+                    score++;
+                    scoreDisplay.textContent = 'Score: ' + score;
+                }
+
+                let rotationAngle = Math.atan2(ySpeed, xSpeed) * (180 / Math.PI);
+
+                if (rotationAngle > 90) {
+                    rotationAngle -= 180;
+                } else if (rotationAngle < -90) {
+                    rotationAngle += 180;
+                }
+
+                logo.style.transform = `rotate(${rotationAngle}deg)`;
+
+                logo.style.left = x + 'px';
+                logo.style.top = y + 'px';
+
+                requestAnimationFrame(update);
+            }
+
+            update();
+        };
+    </script>
+</body>
+</html>
+
